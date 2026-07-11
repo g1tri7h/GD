@@ -170,7 +170,7 @@ canvas{
   <aside class="editor">
     <h1>每日报表海报</h1>
     <div class="desc">
-      只需填写星期、日期和完整报表数据。大总数会根据 Profit/Loss 自动计算。
+      顶部区域已统一外边线：今日报表左边与下方格子对齐，扫码加入右边与下方格子右边对齐。
     </div>
 
     <div class="section">
@@ -219,7 +219,7 @@ const $=id=>document.getElementById(id);
 
 const FIXED_TITLE='今日报表';
 const FIXED_SUBTITLE='DAILY SUMMARY REPORT';
-const FIXED_CURRENCY='MYR';
+const FIXED_CURRENCY='USD';
 const FIXED_TOTAL_TITLE='TOTAL PROFIT / LOSS';
 const FIXED_SLOGAN='双倍选择•双倍精彩';
 const FIXED_GOLD='#d89b25';
@@ -330,6 +330,159 @@ function drawCover(img,x,y,w,h){
   const sx=(img.width-sw)/2,sy=(img.height-sh)/2;
   ctx.drawImage(img,sx,sy,sw,sh,x,y,w,h);
 }
+
+function drawQrPlaceholder(cx,top,size=152){
+  const gold=FIXED_GOLD;
+  const light=FIXED_LIGHT_GOLD;
+  const outer=size+26;
+  const x=cx-outer/2;
+  const y=top;
+
+  ctx.save();
+
+  // Natural shadow follows the compact QR frame.
+  ctx.shadowColor='rgba(0,0,0,.72)';
+  ctx.shadowBlur=18;
+  ctx.shadowOffsetY=9;
+  chamferPath(x,y,outer,outer,12);
+  ctx.fillStyle='rgba(3,4,5,.94)';
+  ctx.fill();
+  ctx.restore();
+
+  // Deep bronze outer edge.
+  chamferPath(x,y,outer,outer,12);
+  ctx.strokeStyle='#603607';
+  ctx.lineWidth=8;
+  ctx.stroke();
+
+  // Bright metallic inner edge.
+  chamferPath(x+4,y+4,outer-8,outer-8,9);
+  ctx.strokeStyle=goldGradient(x,y,outer,outer);
+  ctx.lineWidth=3;
+  ctx.stroke();
+
+  chamferPath(x+11,y+11,outer-22,outer-22,6);
+  ctx.strokeStyle=rgba(light,.34);
+  ctx.lineWidth=1.2;
+  ctx.stroke();
+
+  // Blank white QR area.
+  const whiteSize=size-8;
+  const wx=cx-whiteSize/2;
+  const wy=y+(outer-whiteSize)/2;
+  ctx.fillStyle='#ffffff';
+  ctx.fillRect(wx,wy,whiteSize,whiteSize);
+
+  // Four refined corner accents.
+  const c=17;
+  ctx.strokeStyle=goldGradient(wx,wy,whiteSize,whiteSize);
+  ctx.lineWidth=4;
+  ctx.lineCap='square';
+
+  [
+    [wx+4,wy+4,1,1],
+    [wx+whiteSize-4,wy+4,-1,1],
+    [wx+4,wy+whiteSize-4,1,-1],
+    [wx+whiteSize-4,wy+whiteSize-4,-1,-1]
+  ].forEach(([ax,ay,sx,sy])=>{
+    ctx.beginPath();
+    ctx.moveTo(ax+sx*c,ay);
+    ctx.lineTo(ax,ay);
+    ctx.lineTo(ax,ay+sy*c);
+    ctx.stroke();
+  });
+
+  ctx.restore();
+}
+
+function drawFancyVerticalLabel(text,boxX,boxY,boxW,boxH){
+  const chars=[...text];
+  const cx=boxX+boxW/2;
+  const topPad=48;
+  const bottomPad=48;
+  const usableH=boxH-topPad-bottomPad;
+  const step=usableH/(chars.length-1);
+
+  // 与 QR 外框同高、同一水平线的独立金边框。
+  ctx.save();
+  ctx.shadowColor='rgba(0,0,0,.66)';
+  ctx.shadowBlur=16;
+  ctx.shadowOffsetY=8;
+  chamferPath(boxX,boxY,boxW,boxH,12);
+  ctx.fillStyle='rgba(3,4,5,.96)';
+  ctx.fill();
+  ctx.restore();
+
+  // 深金外边。
+  chamferPath(boxX,boxY,boxW,boxH,12);
+  ctx.strokeStyle='#603607';
+  ctx.lineWidth=8;
+  ctx.stroke();
+
+  // 明亮金属中边。
+  chamferPath(boxX+4,boxY+4,boxW-8,boxH-8,9);
+  ctx.strokeStyle=goldGradient(boxX,boxY,boxW,boxH);
+  ctx.lineWidth=3;
+  ctx.stroke();
+
+  // 内侧细金线，与 QR 框保持一致。
+  chamferPath(boxX+11,boxY+11,boxW-22,boxH-22,6);
+  ctx.strokeStyle=rgba(FIXED_LIGHT_GOLD,.34);
+  ctx.lineWidth=1.2;
+  ctx.stroke();
+
+  ctx.save();
+  ctx.textAlign='center';
+  ctx.textBaseline='middle';
+  ctx.lineJoin='round';
+  ctx.miterLimit=3;
+
+  chars.forEach((char,index)=>{
+    const y=boxY+topPad+index*step;
+    const size=50;
+    ctx.font=`900 ${size}px "Microsoft YaHei","PingFang SC",Arial,sans-serif`;
+
+    // 克制柔光，不让文字边缘发虚。
+    ctx.save();
+    ctx.shadowColor='rgba(255,215,120,.18)';
+    ctx.shadowBlur=9;
+    ctx.fillStyle='rgba(255,244,213,.18)';
+    ctx.fillText(char,cx,y);
+    ctx.restore();
+
+    // 紧凑立体厚度。
+    for(let d=4;d>=1;d--){
+      ctx.lineWidth=8;
+      ctx.strokeStyle='rgba(0,0,0,.88)';
+      ctx.fillStyle=d>2?'#17120b':'#6b400b';
+      ctx.strokeText(char,cx+d*.28,y+d*.32);
+      ctx.fillText(char,cx+d*.28,y+d*.32);
+    }
+
+    // 高对比黑边、深金中层、亮金细边。
+    ctx.lineWidth=10;
+    ctx.strokeStyle='#030303';
+    ctx.strokeText(char,cx,y);
+
+    ctx.lineWidth=4;
+    ctx.strokeStyle='#9b5a0b';
+    ctx.strokeText(char,cx,y);
+
+    ctx.lineWidth=1.8;
+    ctx.strokeStyle='#ffe7a2';
+    ctx.strokeText(char,cx,y);
+
+    const g=ctx.createLinearGradient(cx,y-size*.52,cx,y+size*.52);
+    g.addColorStop(0,'#ffffff');
+    g.addColorStop(.58,'#fffaf0');
+    g.addColorStop(1,'#e9c66f');
+    ctx.fillStyle=g;
+    ctx.fillText(char,cx,y);
+  });
+
+  ctx.restore();
+}
+
 function goldGradient(x,y,w,h){
   const gold=FIXED_GOLD;
   const light=FIXED_LIGHT_GOLD;
@@ -801,7 +954,7 @@ function draw3DText(value,x,y,size,maxWidth,align='left'){
 }
 
 function drawHeader(){
-  const x=42,y=40,w=600,h=425;
+  const x=60,y=42,w=500,h=468;
   const gold=FIXED_GOLD;
   const light=FIXED_LIGHT_GOLD;
 
@@ -834,13 +987,13 @@ function drawHeader(){
   ctx.restore();
 
   // 左侧珠宝级金属徽记。
-  drawLuxuryDiamond(x+13,y+128,38,52,0,true);
+  drawLuxuryDiamond(x+13,y+132,38,52,0,true);
 
-  draw3DText(FIXED_TITLE,78,128,88,520,'left');
+  draw3DText(FIXED_TITLE,94,126,82,420,'left');
 
   // 副标题独立金属字牌。
   const sub=FIXED_SUBTITLE;
-  const px=69,py=220,pw=525,ph=58;
+  const px=85,py=220,pw=418,ph=58;
   ctx.save();
   chamferPath(px,py,pw,ph,10);
   ctx.fillStyle='rgba(5,6,7,.93)';
@@ -871,17 +1024,17 @@ function drawHeader(){
   ctx.restore();
 
   const week=($('weekday').value||'').toUpperCase();
-  draw3DText(week,70,326,29,300,'left');
+  draw3DText(week,86,326,27,255,'left');
 
   const line=ctx.createLinearGradient(70,0,300,0);
   line.addColorStop(0,rgba(light,.95));
   line.addColorStop(.7,rgba(gold,.55));
   line.addColorStop(1,rgba(gold,0));
   ctx.fillStyle=line;
-  ctx.fillRect(70,355,250,2);
+  ctx.fillRect(86,356,215,2);
 
   const date=$('date').value||'';
-  const dateSize=fit(date,485,51,30,'"Microsoft YaHei","PingFang SC",Arial,sans-serif');
+  const dateSize=fit(date,395,48,29,'"Microsoft YaHei","PingFang SC",Arial,sans-serif');
   ctx.save();
   ctx.font=`900 ${dateSize}px "Microsoft YaHei","PingFang SC",Arial,sans-serif`;
   ctx.textAlign='left';
@@ -889,59 +1042,51 @@ function drawHeader(){
   ctx.lineJoin='round';
   for(let d=7;d>=1;d--){
     ctx.fillStyle='rgba(41,24,6,.62)';
-    ctx.fillText(date,70+d*.32,404+d*.38);
+    ctx.fillText(date,86+d*.32,409+d*.38);
   }
   ctx.lineWidth=8;
   ctx.strokeStyle='rgba(0,0,0,.90)';
-  ctx.strokeText(date,70,404);
-  const dg=ctx.createLinearGradient(0,375,0,430);
+  ctx.strokeText(date,86,409);
+  const dg=ctx.createLinearGradient(0,378,0,433);
   dg.addColorStop(0,'#ffffff');
   dg.addColorStop(.5,'#f0eadc');
   dg.addColorStop(1,'#b59756');
   ctx.fillStyle=dg;
-  ctx.fillText(date,70,404);
+  ctx.fillText(date,86,409);
   ctx.restore();
 
-  // 右上角 Logo 与左侧“今日报表”形成左右对称。
+  // 右上角 Logo 放大，并在其下方加入固定空白 QR 码。
   if(logoImage){
-    const logoBoxX=675;
-    const logoBoxY=50;
-    const logoBoxW=350;
-    const logoBoxH=132;
+    const logoBoxX=585;
+    const logoBoxY=28;
+    const logoBoxW=455;
+    const logoBoxH=160;
 
-    // 第一层：极轻、跟随透明轮廓的金色柔光，没有任何矩形底框。
+    // Soft contour glow without any rectangular backing.
     ctx.save();
-    ctx.globalAlpha=.42;
-    ctx.shadowColor=rgba(FIXED_LIGHT_GOLD,.28);
-    ctx.shadowBlur=14;
-    ctx.shadowOffsetX=0;
+    ctx.globalAlpha=.38;
+    ctx.shadowColor=rgba(FIXED_LIGHT_GOLD,.24);
+    ctx.shadowBlur=13;
     ctx.shadowOffsetY=2;
     drawContain(logoImage,logoBoxX,logoBoxY,logoBoxW,logoBoxH);
     ctx.restore();
 
-    // 第二层：清晰本体与自然暗部。
     ctx.save();
-    ctx.shadowColor='rgba(0,0,0,.66)';
+    ctx.shadowColor='rgba(0,0,0,.68)';
     ctx.shadowBlur=10;
-    ctx.shadowOffsetX=2;
     ctx.shadowOffsetY=6;
     drawContain(logoImage,logoBoxX,logoBoxY,logoBoxW,logoBoxH);
     ctx.restore();
 
-    // 底部细金线，呼应左侧主标题区域。
-    const logoLine=ctx.createLinearGradient(700,0,1018,0);
-    logoLine.addColorStop(0,'rgba(216,155,37,0)');
-    logoLine.addColorStop(.22,rgba(FIXED_GOLD,.32));
-    logoLine.addColorStop(.54,rgba(FIXED_LIGHT_GOLD,.58));
-    logoLine.addColorStop(.82,rgba(FIXED_GOLD,.26));
-    logoLine.addColorStop(1,'rgba(216,155,37,0)');
-    ctx.fillStyle=logoLine;
-    ctx.fillRect(700,207,318,1.2);
   }
+
+  // QR code is intentionally blank for later replacement.
+  drawQrPlaceholder(735,210,274);
+  drawFancyVerticalLabel('扫码加入',908,210,112,300);
 }
 
 function drawTotalPanel(){
-  const x=54,y=510,w=972,h=160;
+  const x=60,y=575,w=960,h=160;
   const gold=FIXED_GOLD;
   const light=FIXED_LIGHT_GOLD;
   const total=rows.reduce((sum,row)=>sum+num(row.profit),0);
@@ -995,13 +1140,13 @@ function drawTotalPanel(){
 }
 
 function drawTable(){
-  const x=54,y=705,w=972;
+  const x=60,y=775,w=960;
   const headerH=60,totalH=70;
-  const bottomLimit=1165;
+  const bottomLimit=1215;
   const bodySpace=bottomLimit-y-headerH-totalH;
-  const rowH=Math.max(47,Math.min(78,bodySpace/rows.length));
+  const rowH=Math.max(38,Math.min(78,bodySpace/rows.length));
   const totalHeight=headerH+rowH*rows.length+totalH;
-  const cols=[0,230,480,730,w];
+  const cols=[0,225,470,715,w];
   const headers=['CATEGORY','VALID STAKE','PAYOUT','PROFIT / LOSS'];
   const gold=FIXED_GOLD;
   const light=FIXED_LIGHT_GOLD;
@@ -1036,10 +1181,18 @@ function drawTable(){
 
   rows.forEach((r,i)=>{
     const ry=y+headerH+i*rowH;
+
+    // Clean white report cells with very subtle warm alternation.
     const bg=ctx.createLinearGradient(x,ry,x+w,ry);
-    bg.addColorStop(0,i%2===0?'rgba(9,10,11,.98)':'rgba(13,14,15,.98)');
-    bg.addColorStop(.55,i%2===0?'rgba(18,19,20,.97)':'rgba(20,21,22,.97)');
-    bg.addColorStop(1,'rgba(7,8,9,.98)');
+    if(i%2===0){
+      bg.addColorStop(0,'#ffffff');
+      bg.addColorStop(.55,'#fbfaf7');
+      bg.addColorStop(1,'#f4f1e9');
+    }else{
+      bg.addColorStop(0,'#f7f5ef');
+      bg.addColorStop(.55,'#ffffff');
+      bg.addColorStop(1,'#eeeae0');
+    }
     ctx.fillStyle=bg;
     ctx.fillRect(x,ry,w,rowH);
 
@@ -1051,16 +1204,24 @@ function drawTable(){
     ];
     values.forEach((v,j)=>{
       const size=fit(v,cols[j+1]-cols[j]-22,j===0?25:23,13,'Arial');
-      const color=j===3&&num(r.profit)<0?'#ff4e57':(j===0?light:'#f5f5f5');
-      txt(v,x+(cols[j]+cols[j+1])/2,ry+rowH/2,size,color,'center',j===0?'900':'800','Arial');
+      txt(
+        v,
+        x+(cols[j]+cols[j+1])/2,
+        ry+rowH/2,
+        size,
+        '#111111',
+        'center',
+        j===0?'900':'800',
+        'Arial'
+      );
     });
   });
 
   const ty=y+headerH+rows.length*rowH;
   const tg=ctx.createLinearGradient(x,ty,x+w,ty);
-  tg.addColorStop(0,'#151009');
-  tg.addColorStop(.48,'#392612');
-  tg.addColorStop(1,'#151009');
+  tg.addColorStop(0,'#fffdf7');
+  tg.addColorStop(.48,'#f4ead2');
+  tg.addColorStop(1,'#fffdf7');
   ctx.fillStyle=tg;
   ctx.fillRect(x,ty,w,totalH);
   ctx.fillStyle=goldGradient(x,ty,w,0);
@@ -1074,12 +1235,12 @@ function drawTable(){
   ];
   totals.forEach((v,j)=>{
     const size=fit(v,cols[j+1]-cols[j]-20,j===0?24:22,13,'Arial');
-    txt(v,x+(cols[j]+cols[j+1])/2,ty+totalH/2+2,size,j===0?light:'#fff','center','900','Arial');
+    txt(v,x+(cols[j]+cols[j+1])/2,ty+totalH/2+2,size,'#111111','center','900','Arial');
   });
 
   // 连续对称表格线。
   ctx.save();
-  ctx.strokeStyle=rgba(gold,.60);
+  ctx.strokeStyle='rgba(55,42,22,.55)';
   ctx.lineWidth=1.35;
   chamferPath(x,y,w,totalHeight,11);
   ctx.stroke();
@@ -1109,7 +1270,7 @@ function drawTable(){
 function drawSlogan(){
   const slogan=FIXED_SLOGAN;
   const size=fit(slogan,1030,94,44,'"Microsoft YaHei","PingFang SC",Arial,sans-serif');
-  const y=1276;
+  const y=1325;
 
   ctx.save();
   ctx.textAlign='center';
@@ -1175,25 +1336,25 @@ function drawSlogan(){
   line.addColorStop(.62,rgba(FIXED_GOLD,.55));
   line.addColorStop(1,rgba(FIXED_GOLD,0));
   ctx.fillStyle=line;
-  ctx.fillRect(85,1370,910,2);
+  ctx.fillRect(85,1410,910,2);
 
   ctx.restore();
 
   // 底部中央使用多层金属徽记，并增加两侧细小切角。
-  drawLuxuryDiamond(540,1371,42,52,0,true);
+  drawLuxuryDiamond(540,1410,42,52,0,true);
 
   ctx.save();
   ctx.strokeStyle=rgba(FIXED_GOLD,.62);
   ctx.lineWidth=1.4;
   ctx.beginPath();
-  ctx.moveTo(490,1371);
-  ctx.lineTo(509,1359);
-  ctx.lineTo(523,1371);
-  ctx.lineTo(509,1383);
-  ctx.moveTo(590,1371);
-  ctx.lineTo(571,1359);
-  ctx.lineTo(557,1371);
-  ctx.lineTo(571,1383);
+  ctx.moveTo(490,1410);
+  ctx.lineTo(509,1398);
+  ctx.lineTo(523,1410);
+  ctx.lineTo(509,1422);
+  ctx.moveTo(590,1410);
+  ctx.lineTo(571,1398);
+  ctx.lineTo(557,1410);
+  ctx.lineTo(571,1422);
   ctx.stroke();
   ctx.restore();
 }
