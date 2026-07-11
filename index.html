@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>黑金奢华报表海报生成器</title>
+<style>
+  :root{
+    --bg:#070707;
+    --panel:#111111;
+    --panel2:#17130d;
+    --line:#3a2d18;
+    --text:#f7f2e8;
+    --muted:#9f978a;
+    --gold:#d8ae4a;
+    --gold2:#f3db87;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(circle at 18% 0%, rgba(216,174,74,.09), transparent 32%),
+      linear-gradient(135deg,#060606,#0d0b08 55%,#050505);
+    color:var(--text);
+    font-family:Arial,"Microsoft YaHei","PingFang SC",sans-serif;
+  }
+  .app{
+    width:min(1520px,100%);
+    margin:0 auto;
+    padding:20px;
+    display:grid;
+    grid-template-columns:430px minmax(0,1fr);
+    gap:20px;
+  }
+  .editor,.preview-shell{
+    background:rgba(14,14,14,.96);
+    border:1px solid rgba(243,219,135,.12);
+    border-radius:22px;
+    box-shadow:0 24px 80px rgba(0,0,0,.42);
+  }
+  .editor{
+    padding:18px;
+    max-height:calc(100vh - 40px);
+    overflow:auto;
+  }
+  .preview-shell{
+    min-height:calc(100vh - 40px);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:18px;
+    position:sticky;
+    top:20px;
+  }
+  h1{margin:0 0 6px;font-size:22px}
+  .desc{
+    color:var(--muted);
+    font-size:13px;
+    line-height:1.6;
+    margin-bottom:17px;
+  }
+  .section{
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:14px;
+    margin-bottom:12px;
+    background:linear-gradient(180deg,#17130e,#0f0f0f);
+  }
+  .section-title{
+    color:#f1d57f;
+    font-size:13px;
+    font-weight:900;
+    letter-spacing:.08em;
+    margin-bottom:11px;
+  }
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  label{
+    display:block;
+    color:#bdb4a6;
+    font-size:12px;
+    margin-bottom:5px;
+  }
+  input,select,button{
+    width:100%;
+    border:1px solid #3a3227;
+    border-radius:10px;
+    background:#0a0a0a;
+    color:#fff;
+    padding:10px 11px;
+    font-size:13px;
+    outline:none;
+  }
+  input:focus,select:focus{
+    border-color:#d8ae4a;
+    box-shadow:0 0 0 3px rgba(216,174,74,.12);
+  }
+  input[type="file"]{padding:8px;font-size:12px}
+  input[type="color"]{height:42px;padding:4px}
+  .mini-head,.row-editor{
+    display:grid;
+    grid-template-columns:1.15fr 1fr 1fr 1fr 34px;
+    gap:6px;
+  }
+  .mini-head{
+    font-size:10px;
+    color:#8d8578;
+    margin:0 2px 5px;
+  }
+  .row-editor{margin-bottom:7px}
+  .row-editor input{
+    padding:8px 5px;
+    font-size:11px;
+  }
+  .row-editor button{
+    padding:0;
+    color:#ff9a9f;
+    background:#2a1113;
+    border-color:#5a262b;
+    font-size:18px;
+  }
+  .add{
+    margin-top:7px;
+    background:#1a1712;
+    border-color:#4b3b20;
+    color:#f5df9a;
+    font-weight:800;
+  }
+  .actions{
+    display:grid;
+    grid-template-columns:1fr 1.45fr;
+    gap:10px;
+    position:sticky;
+    bottom:-18px;
+    padding:14px 0 2px;
+    background:linear-gradient(180deg,transparent,#111 28%);
+  }
+  button{cursor:pointer;font-weight:900}
+  .secondary{background:#171717}
+  .primary{
+    border:none;
+    background:linear-gradient(135deg,#fff0a8,#d4a135 55%,#8c6114);
+    color:#171006;
+    box-shadow:0 12px 28px rgba(207,156,46,.23);
+  }
+  canvas{
+    width:min(100%,720px);
+    height:auto;
+    aspect-ratio:3/4;
+    border-radius:14px;
+    background:#080808;
+    box-shadow:0 24px 80px rgba(0,0,0,.58);
+  }
+  .note{
+    margin-top:8px;
+    color:#8f887c;
+    font-size:11px;
+    line-height:1.55;
+  }
+  @media(max-width:980px){
+    .app{grid-template-columns:1fr}
+    .editor{max-height:none}
+    .preview-shell{position:static;min-height:auto}
+  }
+  @media(max-width:560px){
+    .app{padding:10px}
+    .mini-head,.row-editor{grid-template-columns:1.05fr 1fr 1fr 1fr 28px}
+    .row-editor input{font-size:10px;padding:7px 3px}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="editor">
+    <h1>黑金奢华报表海报</h1>
+    <div class="desc">
+      全新 Art Deco 黑金布局。标题与副标题采用多层描边和立体金属效果，下载尺寸为 1080 × 1440。
+    </div>
+
+    <div class="section">
+      <div class="section-title">标题与日期</div>
+      <div>
+        <label>3D 主标题</label>
+        <input id="title" value="今日报表">
+      </div>
+      <div style="margin-top:10px">
+        <label>3D 英文副标题</label>
+        <input id="subtitle" value="DAILY SUMMARY">
+      </div>
+      <div class="grid2" style="margin-top:10px">
+        <div>
+          <label>星期</label>
+          <input id="weekday" value="">
+        </div>
+        <div>
+          <label>日期</label>
+          <input id="date" value="">
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">大总数</div>
+      <div class="grid2">
+        <div>
+          <label>货币</label>
+          <input id="currency" value="MYR">
+        </div>
+        <div>
+          <label>总数标题</label>
+          <input id="totalTitle" value="TOTAL PROFIT / LOSS">
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">完整报表</div>
+      <div class="mini-head">
+        <span>分类</span>
+        <span>Valid Stake</span>
+        <span>Payout</span>
+        <span>Profit/Loss</span>
+        <span></span>
+      </div>
+      <div id="rows"></div>
+      <button class="add" id="addRow">＋ 添加分类</button>
+    </div>
+
+    <div class="section">
+      <div class="section-title">背景与金色</div>
+      <div>
+        <label>上传自定义背景（可选）</label>
+        <input type="file" id="bgFile" accept="image/*">
+      </div>
+      <div class="grid2" style="margin-top:10px">
+        <div>
+          <label>主金色</label>
+          <input type="color" id="goldColor" value="#d8ae4a">
+        </div>
+        <div>
+          <label>高光金色</label>
+          <input type="color" id="lightGold" value="#f3db87">
+        </div>
+      </div>
+      <div class="note">
+        上传背景后，黑金边框、3D 标题、总数徽章与表格仍会保留。
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="secondary" id="resetBtn">恢复示例</button>
+      <button class="primary" id="downloadBtn">下载黑金海报 PNG</button>
+    </div>
+  </aside>
+
+  <main class="preview-shell">
+    <canvas id="poster" width="1080" height="1440"></canvas>
+  </main>
+</div>
+
+<script>
+const canvas = document.getElementById('poster');
+const ctx = canvas.getContext('2d');
+const $ = id => document.getElementById(id);
+
+let bgImage = null;
+
+const sampleRows = [
+  {name:'Slot', stake:'1,158,484.93', payout:'1,129,355.75', profit:'29,129.15'},
+  {name:'Live Casino', stake:'581,191.20', payout:'585,236.25', profit:'-4,045.05'},
+  {name:'Sports', stake:'68,232.80', payout:'58,850.20', profit:'9,382.63'},
+  {name:'Lottery', stake:'1,873.86', payout:'1,844.70', profit:'29.16'}
+];
+
+let rows = JSON.parse(JSON.stringify(sampleRows));
+
+function setToday(){
+  const d = new Date();
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  $('weekday').value = days[d.getDay()];
+  $('date').value =
+    String(d.getDate()).padStart(2,'0')+'.'+
+    String(d.getMonth()+1).padStart(2,'0')+'.'+
+    d.getFullYear();
+}
+setToday();
+
+function esc(s){
+  return String(s).replace(/[&<>"']/g,m=>({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'
+  }[m]));
+}
+function parseNum(v){
+  const n=Number(String(v).replace(/,/g,'').trim());
+  return Number.isFinite(n)?n:0;
+}
+function money(n){
+  return n.toLocaleString('en-US',{
+    minimumFractionDigits:2,
+    maximumFractionDigits:2
+  });
+}
+function renderRows(){
+  const wrap=$('rows');
+  wrap.innerHTML=rows.map((r,i)=>`
+    <div class="row-editor" data-i="${i}">
+      <input class="name" value="${esc(r.name)}">
+      <input class="stake" value="${esc(r.stake)}" inputmode="decimal">
+      <input class="payout" value="${esc(r.payout)}" inputmode="decimal">
+      <input class="profit" value="${esc(r.profit)}" inputmode="decimal">
+      <button class="delete" title="删除">×</button>
+    </div>
+  `).join('');
+
+  wrap.querySelectorAll('.row-editor').forEach(el=>{
+    const i=Number(el.dataset.i);
+    el.querySelector('.name').addEventListener('input',e=>{rows[i].name=e.target.value;draw()});
+    el.querySelector('.stake').addEventListener('input',e=>{rows[i].stake=e.target.value;draw()});
+    el.querySelector('.payout').addEventListener('input',e=>{rows[i].payout=e.target.value;draw()});
+    el.querySelector('.profit').addEventListener('input',e=>{rows[i].profit=e.target.value;draw()});
+    el.querySelector('.delete').addEventListener('click',()=>{
+      if(rows.length<=1)return;
+      rows.splice(i,1);
+      renderRows();
+      draw();
+    });
+  });
+}
+
+$('addRow').addEventListener('click',()=>{
+  if(rows.length>=8){
+    alert('最多建议放 8 个分类');
+    return;
+  }
+  rows.push({name:'New Category',stake:'0.00',payout:'0.00',profit:'0.00'});
+  renderRows();
+  draw();
+});
+
+$('bgFile').addEventListener('change',e=>{
+  const file=e.target.files[0];
+  if(!file){bgImage=null;draw();return;}
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const img=new Image();
+    img.onload=()=>{bgImage=img;draw()};
+    img.src=ev.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+document.querySelectorAll('input').forEach(el=>{
+  if(el.id!=='bgFile')el.addEventListener('input',draw);
+});
+
+function hexToRgb(hex){
+  const h=hex.replace('#','');
+  const v=parseInt(h.length===3?h.split('').map(c=>c+c).join(''):h,16);
+  return {r:(v>>16)&255,g:(v>>8)&255,b:v&255};
+}
+function rgba(hex,a){
+  const c=hexToRgb(hex);
+  return `rgba(${c.r},${c.g},${c.b},${a})`;
+}
+function roundedRect(x,y,w,h,r){
+  const rr=Math.min(r,w/2,h/2);
+  ctx.beginPath();
+  ctx.moveTo(x+rr,y);
+  ctx.arcTo(x+w,y,x+w,y+h,rr);
+  ctx.arcTo(x+w,y+h,x,y+h,rr);
+  ctx.arcTo(x,y+h,x,y,rr);
+  ctx.arcTo(x,y,x+w,y,rr);
+  ctx.closePath();
+}
+function drawCover(img,x,y,w,h){
+  const scale=Math.max(w/img.width,h/img.height);
+  const sw=w/scale,sh=h/scale;
+  const sx=(img.width-sw)/2,sy=(img.height-sh)/2;
+  ctx.drawImage(img,sx,sy,sw,sh,x,y,w,h);
+}
+function fitText(value,maxWidth,start,min=16,font='Arial'){
+  let size=start;
+  while(size>min){
+    ctx.font=`900 ${size}px ${font}`;
+    if(ctx.measureText(value).width<=maxWidth)break;
+    size-=2;
+  }
+  return size;
+}
+function fillText(value,x,y,size,color,align='left',weight='900',font='Arial, "Microsoft YaHei", sans-serif'){
+  ctx.save();
+  ctx.font=`${weight} ${size}px ${font}`;
+  ctx.fillStyle=color;
+  ctx.textAlign=align;
+  ctx.textBaseline='middle';
+  ctx.fillText(value,x,y);
+  ctx.restore();
+}
+function metallicGradient(x,y,w,h,gold,light){
+  const g=ctx.createLinearGradient(x,y,x+w,y+h);
+  g.addColorStop(0,'#6f4a10');
+  g.addColorStop(.18,gold);
+  g.addColorStop(.38,light);
+  g.addColorStop(.52,'#fff3bd');
+  g.addColorStop(.68,gold);
+  g.addColorStop(1,'#6a430d');
+  return g;
+}
+
+function drawBackground(){
+  const W=canvas.width,H=canvas.height;
+  const gold=$('goldColor').value;
+  const light=$('lightGold').value;
+
+  if(bgImage){
+    drawCover(bgImage,0,0,W,H);
+    const ov=ctx.createLinearGradient(0,0,0,H);
+    ov.addColorStop(0,'rgba(0,0,0,.48)');
+    ov.addColorStop(.5,'rgba(0,0,0,.58)');
+    ov.addColorStop(1,'rgba(0,0,0,.76)');
+    ctx.fillStyle=ov;
+    ctx.fillRect(0,0,W,H);
+  }else{
+    const bg=ctx.createRadialGradient(540,180,60,540,720,1100);
+    bg.addColorStop(0,'#241b0f');
+    bg.addColorStop(.30,'#0f0d0a');
+    bg.addColorStop(.70,'#080808');
+    bg.addColorStop(1,'#030303');
+    ctx.fillStyle=bg;
+    ctx.fillRect(0,0,W,H);
+
+    ctx.save();
+    ctx.globalAlpha=.18;
+    for(let i=-500;i<1500;i+=170){
+      const grad=ctx.createLinearGradient(i,0,i+520,0);
+      grad.addColorStop(0,'transparent');
+      grad.addColorStop(.5,light);
+      grad.addColorStop(1,'transparent');
+      ctx.strokeStyle=grad;
+      ctx.lineWidth=10;
+      ctx.beginPath();
+      ctx.moveTo(i,-100);
+      ctx.lineTo(i+820,800);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // 奢华边框
+  ctx.save();
+  ctx.strokeStyle=metallicGradient(0,0,W,H,gold,light);
+  ctx.lineWidth=10;
+  roundedRect(28,28,W-56,H-56,22);
+  ctx.stroke();
+
+  ctx.strokeStyle=rgba(light,.35);
+  ctx.lineWidth=2;
+  roundedRect(46,46,W-92,H-92,18);
+  ctx.stroke();
+
+  // Art Deco 角花
+  const corners=[
+    [70,70,1,1],
+    [W-70,70,-1,1],
+    [70,H-70,1,-1],
+    [W-70,H-70,-1,-1]
+  ];
+  corners.forEach(([x,y,sx,sy])=>{
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(sx,sy);
+    ctx.strokeStyle=metallicGradient(0,0,170,170,gold,light);
+    ctx.lineWidth=5;
+    ctx.beginPath();
+    ctx.moveTo(0,120);ctx.lineTo(0,0);ctx.lineTo(120,0);
+    ctx.moveTo(20,100);ctx.lineTo(20,20);ctx.lineTo(100,20);
+    ctx.moveTo(40,80);ctx.lineTo(40,40);ctx.lineTo(80,40);
+    ctx.stroke();
+    ctx.restore();
+  });
+
+  // 细小金尘
+  ctx.globalAlpha=.55;
+  for(let i=0;i<75;i++){
+    const x=(i*173)%W;
+    const y=(i*97)%H;
+    const r=1+(i%3);
+    ctx.fillStyle=i%4===0?light:gold;
+    ctx.beginPath();
+    ctx.arc(x,y,r,0,Math.PI*2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function draw3DTitle(value,x,y,maxWidth){
+  const gold=$('goldColor').value;
+  const light=$('lightGold').value;
+  const size=fitText(value,maxWidth,82,42,'"Microsoft YaHei", "PingFang SC", serif');
+
+  ctx.save();
+  ctx.textAlign='center';
+  ctx.textBaseline='middle';
+  ctx.font=`900 ${size}px "Microsoft YaHei","PingFang SC",serif`;
+  ctx.lineJoin='round';
+
+  // 深层厚度
+  for(let d=16;d>=2;d-=2){
+    ctx.lineWidth=12;
+    ctx.strokeStyle=`rgba(42,26,5,${0.30 + d/40})`;
+    ctx.fillStyle='#4a2f0a';
+    ctx.strokeText(value,x+d*.35,y+d*.42);
+    ctx.fillText(value,x+d*.35,y+d*.42);
+  }
+
+  // 黑色外描边
+  ctx.lineWidth=18;
+  ctx.strokeStyle='rgba(0,0,0,.92)';
+  ctx.strokeText(value,x,y);
+
+  // 金色中描边
+  ctx.lineWidth=10;
+  ctx.strokeStyle=gold;
+  ctx.strokeText(value,x,y);
+
+  // 金属填色
+  ctx.fillStyle=metallicGradient(x-maxWidth/2,y-size/2,maxWidth,size,gold,light);
+  ctx.fillText(value,x,y);
+
+  // 顶部高光
+  ctx.globalAlpha=.38;
+  ctx.fillStyle='#fff9d7';
+  ctx.fillText(value,x,y-3);
+  ctx.restore();
+}
+
+function draw3DSubtitle(value,x,y,maxWidth){
+  const gold=$('goldColor').value;
+  const light=$('lightGold').value;
+  const size=fitText(value,maxWidth,38,20,'Georgia, serif');
+
+  ctx.save();
+  ctx.textAlign='center';
+  ctx.textBaseline='middle';
+  ctx.font=`900 ${size}px Georgia, serif`;
+  ctx.letterSpacing='4px';
+
+  for(let d=10;d>=2;d-=2){
+    ctx.fillStyle='rgba(54,34,7,.55)';
+    ctx.fillText(value,x+d*.32,y+d*.38);
+  }
+
+  ctx.lineJoin='round';
+  ctx.lineWidth=8;
+  ctx.strokeStyle='rgba(0,0,0,.9)';
+  ctx.strokeText(value,x,y);
+
+  ctx.lineWidth=3;
+  ctx.strokeStyle=gold;
+  ctx.strokeText(value,x,y);
+
+  ctx.fillStyle=metallicGradient(x-maxWidth/2,y-size/2,maxWidth,size,gold,light);
+  ctx.fillText(value,x,y);
+  ctx.restore();
+}
+
+function drawHeader(){
+  const gold=$('goldColor').value;
+  const light=$('lightGold').value;
+
+  draw3DTitle($('title').value||'今日报表',540,126,760);
+  draw3DSubtitle($('subtitle').value||'DAILY SUMMARY',540,195,650);
+
+  // 标题下方装饰线
+  ctx.save();
+  ctx.strokeStyle=metallicGradient(180,0,720,0,gold,light);
+  ctx.lineWidth=4;
+  ctx.beginPath();
+  ctx.moveTo(210,235);
+  ctx.lineTo(430,235);
+  ctx.lineTo(470,215);
+  ctx.lineTo(540,248);
+  ctx.lineTo(610,215);
+  ctx.lineTo(650,235);
+  ctx.lineTo(870,235);
+  ctx.stroke();
+
+  ctx.fillStyle=light;
+  ctx.beginPath();
+  ctx.moveTo(540,228);ctx.lineTo(552,240);ctx.lineTo(540,252);ctx.lineTo(528,240);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+
+  // 星期与日期
+  fillText($('weekday').value,540,288,34,'#f1e7ce','center','800','Georgia, serif');
+  fillText($('date').value,540,342,54,'#ffffff','center','900','Arial');
+}
+
+function drawTotalMedallion(){
+  const gold=$('goldColor').value;
+  const light=$('lightGold').value;
+  const total=rows.reduce((s,r)=>s+parseNum(r.profit),0);
+
+  const cx=540,cy=475,ow=780,oh=190;
+
+  ctx.save();
+  ctx.shadowColor='rgba(0,0,0,.65)';
+  ctx.shadowBlur=28;
+  ctx.shadowOffsetY=14;
+  roundedRect(cx-ow/2,cy-oh/2,ow,oh,36);
+  ctx.fillStyle='rgba(5,5,5,.82)';
+  ctx.fill();
+  ctx.restore();
+
+  // 双层金框
+  ctx.save();
+  ctx.strokeStyle=metallicGradient(cx-ow/2,cy-oh/2,ow,oh,gold,light);
+  ctx.lineWidth=8;
+  roundedRect(cx-ow/2,cy-oh/2,ow,oh,36);
+  ctx.stroke();
+
+  ctx.strokeStyle=rgba(light,.35);
+  ctx.lineWidth=2;
+  roundedRect(cx-ow/2+18,cy-oh/2+18,ow-36,oh-36,24);
+  ctx.stroke();
+
+  // 两侧装饰
+  ctx.strokeStyle=rgba(gold,.75);
+  ctx.lineWidth=4;
+  ctx.beginPath();
+  ctx.moveTo(cx-ow/2+35,cy);
+  ctx.lineTo(cx-ow/2+120,cy);
+  ctx.lineTo(cx-ow/2+150,cy-24);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(cx+ow/2-35,cy);
+  ctx.lineTo(cx+ow/2-120,cy);
+  ctx.lineTo(cx+ow/2-150,cy-24);
+  ctx.stroke();
+  ctx.restore();
+
+  fillText($('currency').value||'MYR',cx,cy-46,28,light,'center','900','Georgia, serif');
+
+  const totalText=money(total);
+  const totalSize=fitText(totalText,640,82,42,'Arial');
+  ctx.save();
+  ctx.textAlign='center';
+  ctx.textBaseline='middle';
+  ctx.font=`900 ${totalSize}px Arial`;
+  ctx.lineJoin='round';
+  ctx.lineWidth=12;
+  ctx.strokeStyle='rgba(0,0,0,.95)';
+  ctx.strokeText(totalText,cx,cy+12);
+  ctx.fillStyle=metallicGradient(cx-320,cy-38,640,100,gold,light);
+  ctx.fillText(totalText,cx,cy+12);
+  ctx.restore();
+
+  fillText($('totalTitle').value||'TOTAL PROFIT / LOSS',cx,cy+65,23,'#e8dcc0','center','800','Georgia, serif');
+}
+
+function drawTable(){
+  const gold=$('goldColor').value;
+  const light=$('lightGold').value;
+
+  const x=60,y=610,w=960;
+  const headerH=68;
+  const totalH=82;
+  const available=720;
+  const rowH=Math.max(66,Math.min(96,(available-headerH-totalH)/rows.length));
+
+  const cols=[0,220,500,745,w];
+  const headers=['CATEGORY','VALID STAKE','PAYOUT','PROFIT / LOSS'];
+
+  // 整体底座
+  ctx.save();
+  ctx.shadowColor='rgba(0,0,0,.55)';
+  ctx.shadowBlur=24;
+  ctx.shadowOffsetY=12;
+  roundedRect(x,y,w,headerH+rows.length*rowH+totalH,20);
+  ctx.fillStyle='rgba(4,4,4,.76)';
+  ctx.fill();
+  ctx.restore();
+
+  // 外框
+  ctx.strokeStyle=metallicGradient(x,y,w,headerH+rows.length*rowH+totalH,gold,light);
+  ctx.lineWidth=5;
+  roundedRect(x,y,w,headerH+rows.length*rowH+totalH,20);
+  ctx.stroke();
+
+  // 表头
+  roundedRect(x+6,y+6,w-12,headerH-8,14);
+  ctx.fillStyle=metallicGradient(x,y,w,headerH,gold,light);
+  ctx.fill();
+
+  headers.forEach((h,i)=>{
+    const cx=x+(cols[i]+cols[i+1])/2;
+    fillText(h,cx,y+headerH/2+2,21,'#171006','center','900','Arial');
+  });
+
+  // 行
+  rows.forEach((r,i)=>{
+    const ry=y+headerH+i*rowH+6;
+    const rh=rowH-10;
+
+    roundedRect(x+8,ry,w-16,rh,10);
+    const rg=ctx.createLinearGradient(x,ry,x+w,ry);
+    rg.addColorStop(0,'rgba(18,15,10,.96)');
+    rg.addColorStop(.5,'rgba(34,27,16,.96)');
+    rg.addColorStop(1,'rgba(15,13,9,.96)');
+    ctx.fillStyle=rg;
+    ctx.fill();
+
+    ctx.strokeStyle=rgba(gold,.30);
+    ctx.lineWidth=1.5;
+    [cols[1],cols[2],cols[3]].forEach(v=>{
+      ctx.beginPath();
+      ctx.moveTo(x+v,ry+8);
+      ctx.lineTo(x+v,ry+rh-8);
+      ctx.stroke();
+    });
+
+    const values=[
+      r.name,
+      money(parseNum(r.stake)),
+      money(parseNum(r.payout)),
+      money(parseNum(r.profit))
+    ];
+
+    values.forEach((v,j)=>{
+      const maxWidth=cols[j+1]-cols[j]-18;
+      const size=fitText(v,maxWidth,j===0?27:25,15,'Arial');
+      const neg=j===3 && parseNum(r.profit)<0;
+      fillText(
+        v,
+        x+(cols[j]+cols[j+1])/2,
+        ry+rh/2,
+        size,
+        neg?'#ff626a':(j===0?light:'#f8f4eb'),
+        'center',
+        '900',
+        'Arial'
+      );
+    });
+  });
+
+  // 总计行
+  const ty=y+headerH+rows.length*rowH+2;
+  roundedRect(x+6,ty,w-12,totalH-8,12);
+  ctx.fillStyle=metallicGradient(x,ty,w,totalH,gold,light);
+  ctx.fill();
+
+  ctx.strokeStyle='rgba(55,34,7,.42)';
+  ctx.lineWidth=2;
+  [cols[1],cols[2],cols[3]].forEach(v=>{
+    ctx.beginPath();
+    ctx.moveTo(x+v,ty+6);
+    ctx.lineTo(x+v,ty+totalH-14);
+    ctx.stroke();
+  });
+
+  const totals=[
+    'GRAND TOTAL',
+    money(rows.reduce((s,r)=>s+parseNum(r.stake),0)),
+    money(rows.reduce((s,r)=>s+parseNum(r.payout),0)),
+    money(rows.reduce((s,r)=>s+parseNum(r.profit),0))
+  ];
+
+  totals.forEach((v,j)=>{
+    const maxWidth=cols[j+1]-cols[j]-18;
+    const size=fitText(v,maxWidth,j===0?26:25,15,'Arial');
+    fillText(v,x+(cols[j]+cols[j+1])/2,ty+(totalH-8)/2,size,'#171006','center','900','Arial');
+  });
+}
+
+function drawBottomOrnament(){
+  const gold=$('goldColor').value;
+  const light=$('lightGold').value;
+  const y=1362;
+
+  ctx.save();
+  ctx.strokeStyle=metallicGradient(150,y,780,0,gold,light);
+  ctx.lineWidth=4;
+  ctx.beginPath();
+  ctx.moveTo(160,y);
+  ctx.lineTo(430,y);
+  ctx.lineTo(470,y-18);
+  ctx.lineTo(540,y+8);
+  ctx.lineTo(610,y-18);
+  ctx.lineTo(650,y);
+  ctx.lineTo(920,y);
+  ctx.stroke();
+
+  ctx.fillStyle=light;
+  ctx.beginPath();
+  ctx.moveTo(540,y-5);
+  ctx.lineTo(551,y+7);
+  ctx.lineTo(540,y+19);
+  ctx.lineTo(529,y+7);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+function draw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  drawBackground();
+  drawHeader();
+  drawTotalMedallion();
+  drawTable();
+  drawBottomOrnament();
+}
+
+$('downloadBtn').addEventListener('click',()=>{
+  draw();
+  const a=document.createElement('a');
+  const safeDate=($('date').value||'report').replace(/[^\d.-]/g,'-');
+  a.download=`Luxury-Black-Gold-Report-${safeDate}.png`;
+  a.href=canvas.toDataURL('image/png');
+  a.click();
+});
+
+$('resetBtn').addEventListener('click',()=>{
+  rows=JSON.parse(JSON.stringify(sampleRows));
+  $('title').value='今日报表';
+  $('subtitle').value='DAILY SUMMARY';
+  $('currency').value='MYR';
+  $('totalTitle').value='TOTAL PROFIT / LOSS';
+  $('goldColor').value='#d8ae4a';
+  $('lightGold').value='#f3db87';
+  $('bgFile').value='';
+  bgImage=null;
+  setToday();
+  renderRows();
+  draw();
+});
+
+renderRows();
+draw();
+</script>
+</body>
+</html>
