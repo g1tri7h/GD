@@ -170,11 +170,11 @@ canvas{
   <aside class="editor">
     <h1>每日报表海报</h1>
     <div class="desc">
-      只保留星期、日期、大总数和完整报表数据。其他视觉内容已经固定，避免误改。
+      只需填写星期、日期和完整报表数据。大总数会根据 Profit/Loss 自动计算。
     </div>
 
     <div class="section">
-      <div class="section-title">日期与大总数</div>
+      <div class="section-title">日期</div>
       <div class="grid2">
         <div>
           <label>星期</label>
@@ -185,10 +185,7 @@ canvas{
           <input id="date">
         </div>
       </div>
-      <div style="margin-top:10px">
-        <label>大总数</label>
-        <input id="totalValue" value="34,495.89" inputmode="decimal">
-      </div>
+      <div class="note">大总数会自动汇总表格内所有 Profit/Loss。</div>
     </div>
 
     <div class="section">
@@ -947,7 +944,7 @@ function drawTotalPanel(){
   const x=54,y=510,w=972,h=160;
   const gold=FIXED_GOLD;
   const light=FIXED_LIGHT_GOLD;
-  const total=num($('totalValue').value);
+  const total=rows.reduce((sum,row)=>sum+num(row.profit),0);
 
   ctx.save();
   ctx.shadowColor='rgba(0,0,0,.75)';
@@ -1120,19 +1117,28 @@ function drawSlogan(){
   ctx.font=`900 ${size}px "Microsoft YaHei","PingFang SC",Arial,sans-serif`;
   ctx.lineJoin='round';
 
-  ctx.shadowColor='rgba(0,0,0,.84)';
-  ctx.shadowBlur=10;
-  ctx.shadowOffsetY=9;
+  // 柔和扩散阴影：边缘逐渐消失，不再形成生硬黑块。
+  ctx.save();
+  ctx.shadowColor='rgba(0,0,0,.58)';
+  ctx.shadowBlur=24;
+  ctx.shadowOffsetX=2;
+  ctx.shadowOffsetY=13;
+  ctx.fillStyle='rgba(0,0,0,.30)';
+  ctx.fillText(slogan,540,y+2);
+  ctx.restore();
 
-  for(let d=17;d>=2;d-=2){
-    ctx.lineWidth=14;
-    ctx.strokeStyle=`rgba(13,8,2,${.32+d/40})`;
-    ctx.fillStyle=d>9?'#322005':'#75460b';
-    ctx.strokeText(slogan,540+d*.36,y+d*.42);
-    ctx.fillText(slogan,540+d*.36,y+d*.42);
-  }
-
+  // 渐进式立体厚度：层数更密、透明度更低，过渡更自然。
   ctx.shadowColor='transparent';
+  for(let d=14;d>=1;d-=1){
+    const progress=d/14;
+    ctx.lineWidth=10+progress*3;
+    ctx.strokeStyle=`rgba(14,8,2,${.16+progress*.38})`;
+    ctx.fillStyle=progress>.55
+      ? `rgba(44,27,6,${.42+progress*.28})`
+      : `rgba(112,67,11,${.42+progress*.22})`;
+    ctx.strokeText(slogan,540+d*.32,y+d*.38);
+    ctx.fillText(slogan,540+d*.32,y+d*.38);
+  }
   ctx.lineWidth=18;
   ctx.strokeStyle='#020202';
   ctx.strokeText(slogan,540,y);
@@ -1220,7 +1226,6 @@ $('downloadBtn').onclick=()=>{
 
 $('resetBtn').onclick=()=>{
   rows=JSON.parse(JSON.stringify(sampleRows));
-  $('totalValue').value='34,495.89';
   setToday();
   renderRows();
   draw();
