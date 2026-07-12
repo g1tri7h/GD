@@ -170,7 +170,7 @@ canvas{
   <aside class="editor">
     <h1>每日报表海报</h1>
     <div class="desc">
-      大总数黑色边缘已改成柔和轮廓阴影与渐进式深金厚度；整体金色重新取自 Empire88 Logo 的琥珀金、香槟金和浅金高光。
+      中间报表的表头、数据和 GRAND TOTAL 已全面放大并加粗，表格线也稍微加深，方便长辈直接看清楚。
     </div>
 
     <div class="section">
@@ -1362,8 +1362,17 @@ function drawTable(){
   ctx.restore();
 
   headers.forEach((h,i)=>{
-    const size=fit(h,cols[i+1]-cols[i]-20,20,14,'Arial');
-    txt(h,x+(cols[i]+cols[i+1])/2,y+headerH/2,size,'#15100a','center','900','Arial');
+    const size=fit(h,cols[i+1]-cols[i]-18,25,17,'Arial');
+    txt(
+      h,
+      x+(cols[i]+cols[i+1])/2,
+      y+headerH/2,
+      size,
+      '#15100a',
+      'center',
+      '900',
+      'Arial'
+    );
   });
 
   rows.forEach((r,i)=>{
@@ -1390,7 +1399,13 @@ function drawTable(){
       money(num(r.profit))
     ];
     values.forEach((v,j)=>{
-      const size=fit(v,cols[j+1]-cols[j]-22,j===0?25:23,13,'Arial');
+      const size=fit(
+        v,
+        cols[j+1]-cols[j]-18,
+        j===0?31:29,
+        17,
+        'Arial'
+      );
       const cellColor=(j===3 && num(r.profit)<0)
         ? '#d71920'
         : '#111111';
@@ -1401,7 +1416,7 @@ function drawTable(){
         size,
         cellColor,
         'center',
-        j===0?'900':'800',
+        '900',
         'Arial'
       );
     });
@@ -1425,15 +1440,30 @@ function drawTable(){
   ];
   const grandProfit=rows.reduce((s,r)=>s+num(r.profit),0);
   totals.forEach((v,j)=>{
-    const size=fit(v,cols[j+1]-cols[j]-20,j===0?24:22,13,'Arial');
+    const size=fit(
+      v,
+      cols[j+1]-cols[j]-18,
+      j===0?29:27,
+      17,
+      'Arial'
+    );
     const totalColor=(j===3 && grandProfit<0)?'#d71920':'#111111';
-    txt(v,x+(cols[j]+cols[j+1])/2,ty+totalH/2+2,size,totalColor,'center','900','Arial');
+    txt(
+      v,
+      x+(cols[j]+cols[j+1])/2,
+      ty+totalH/2+2,
+      size,
+      totalColor,
+      'center',
+      '900',
+      'Arial'
+    );
   });
 
   // 连续对称表格线。
   ctx.save();
   ctx.strokeStyle='rgba(55,42,22,.55)';
-  ctx.lineWidth=1.35;
+  ctx.lineWidth=1.7;
   chamferPath(x,y,w,totalHeight,11);
   ctx.stroke();
 
